@@ -1,0 +1,16 @@
+# Convert dairy data from Excel to csv format.
+#
+StartLog(LogFile="xlsx-to-csv.TSTool.log")
+#
+#  TSTool is used because it automates the process.
+# "Dairy" worksheet
+#  Filter out rows with empty DairyName in case there are extra rows.
+SetDebugLevel(LogFileLevel=1)
+ReadTableFromExcel(TableID="Dairies",InputFile="..\data\Colorado-Dairies.xlsx",Worksheet="Dairy",ExcelColumnNames=FirstRowInRange,ColumnExcludeFilters="DairyName:",ExcelIntegerColumns="ZipCode",ExcelDateTimeColumns="Formation_Date,Dissolution_Date",ExcelTextColumns="BusinessEntity_ID,Municipality_DOLA_LG_ID,WaterSource_GNIS_ID")
+# Reformat Formation_Date and Dissolution_Date columns to get rid of the time format
+FormatTableDateTime(TableID="Dairies",InputColumn="Formation_Date",DateTimeFormat="%Y-%m-%d",OutputColumn="Formation_Date",InsertBeforeColumn="Formation_Date_Flag")
+FormatTableDateTime(TableID="Dairies",InputColumn="Dissolution_Date",DateTimeFormat="%Y-%m-%d",OutputColumn="Dissolution_Date",InsertBeforeColumn="Dissolution_Date_Flag")
+SetDebugLevel(ScreenLevel=0,LogFileLevel=0)
+WriteTableToDelimitedFile(TableID="Dairies",OutputFile="..\data\Colorado-Dairies.csv",WriteHeaderComments=False)
+#
+#

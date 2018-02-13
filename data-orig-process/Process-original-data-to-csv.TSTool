@@ -1,0 +1,42 @@
+# This command file downloads data from websites directly and processes the data into useful formats to be
+# incorporated into the Colorado Dairies dataset.  The command file also processes data downloaded from websites
+# that had to first be downloaded manually or needed to be copied from a website and pasted into Excel.
+#
+# NOTE THAT THIS IS A WORK IN PROGRESS.  MORE COMMANDS WILL BE ADDED AS THE PROCESS IS FULLY STANDARDIZED.
+#
+# Business Entity IDs
+# Get the data
+WebGet(URI="https://data.colorado.gov/api/views/ir9i-8nja/rows.csv?accessType=DOWNLOAD",LocalFile="Dairy-BusinessIDs-original.csv")
+#
+# Read in the downloaded CSV file as a table
+ReadTableFromDelimitedFile(TableID="Dairy-BusinessIDs-orig",InputFile="Dairy-BusinessIDs-original.csv",Delimiter=",",HeaderLines="1",DateTimeColumns="entityformdate",TextColumns="entityid")
+#
+# Copy table to rename column names and remove unneeded columns
+CopyTable(TableID="Dairy-BusinessIDs-orig",NewTableID="Dairy-BusinessIDs",IncludeColumns="entityid,entityname,principaladdress1,principalcity,principalstate,principalzipcode,entityformdate",ColumnMap="entityid:BusinessEntity_ID,entityname:DairyName,principaladdress1:Physical_Address,principalcity:Municipality,principalstate:State,principalzipcode:ZipCode,entityformdate:Formation_Date")
+#
+# Copy table and filter only those entities listed as "Dissolved".  Will use this to configure a "Dissolution_Date" column.
+CopyTable(TableID="Dairy-BusinessIDs",NewTableID="Dissolved-Dairies",IncludeColumns="BusinessEntity_ID,DairyName",ColumnFilters="DairyName:*Dissolved*")
+SplitTableColumn(TableID="Dissolved-Dairies",ColumnToSplit="DairyName",Delimiter=", Dissolved",OutputColumns="DairyName2,Dissolution_Date",DeleteOriginalColumn=True)
+#
+# Rejoin dissolved entities to original table
+JoinTables(TableID="Dairy-BusinessIDs",TableToJoinID="Dissolved-Dairies",JoinColumns="BusinessEntity_ID:BusinessEntity_ID",IncludeColumns="Dissolution_Date")
+ManipulateTableString(TableID="Dairy-BusinessIDs",InputColumn1="DairyName",Operator="Replace",InputValue2=", Dissolved*",InputValue3="$",OutputColumn="DairyName")
+#
+# Copy Dairy-BusinessIDs table again and filter out entity names with "Dissolved" again.  Will remove the "Dissolved" part and then this time append the rows with the new names
+# First copy the table to create a new table of undissolved dairies
+CopyTable(TableID="Dairy-BusinessIDs",NewTableID="Not-Dissolved-Dairies",ColumnExcludeFilters="DairyName:*Dissolved*")
+#
+# Now copy the dissolved dairies, split the "Dissolved" portion of the name into a new column and then delete the column with the "Dissolved" portion
+CopyTable(TableID="Dairy-BusinessIDs",NewTableID="Dissolved-Dairies-2",ColumnMap="DairyName:DairyName2",ColumnFilters="DairyName:*Dissolved*")
+SplitTableColumn(TableID="Dissolved-Dairies-2",ColumnToSplit="DairyName2",Delimiter=", Dissolved",OutputColumns="DairyName,Extra",InsertBeforeColumn="Physical_Address",DeleteOriginalColumn=True)
+DeleteTableColumns(TableID="Dissolved-Dairies-2",DeleteColumns="Extra")
+#
+# Append the undissolved and dissolved entities back together
+AppendTable(TableID="Not-Dissolved-Dairies",AppendTableID="Dissolved-Dairies-2")
+SortTable(TableID="Not-Dissolved-Dairies",SortColumns="DairyName")
+#
+# Save table as CSV to be located in data-orig folder
+WriteTableToDelimitedFile(TableID="Not-Dissolved-Dairies",OutputFile="..\data-orig\Dairy-BusinessEntity-IDs.csv",WriteHeaderComments=False,NaNValue="Blank")
+#
+#
+#
