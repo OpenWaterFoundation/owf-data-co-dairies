@@ -1,0 +1,23 @@
+# Convert dairy data from Excel to geojson and csv formats.
+#
+StartLog(LogFile="results/01-convert-formats.tstool.log")
+#
+#  Filter out rows with empty DairyName in case there are extra rows.
+#SetDebugLevel(LogFileLevel=1)
+ReadTableFromExcel(TableID="Dairies",InputFile="../data/co-dairies.xlsx",Worksheet="Dairy",ExcelColumnNames=FirstRowInRange,ColumnExcludeFilters="DairyName:",ExcelIntegerColumns="ZipCode",ExcelDateTimeColumns="Formation_Date,Dissolution_Date",ExcelTextColumns="BusinessEntity_ID,Municipality_DOLA_LG_ID,WaterSource_GNIS_ID")
+# Reformat Formation_Date and Dissolution_Date columns to get rid of time format.
+FormatTableDateTime(TableID="Dairies",InputColumn="Formation_Date",DateTimeFormat="%Y-%m-%d",OutputColumn="Formation_Date",InsertBeforeColumn="Formation_Date_Flag")
+FormatTableDateTime(TableID="Dairies",InputColumn="Dissolution_Date",DateTimeFormat="%Y-%m-%d",OutputColumn="Dissolution_Date",InsertBeforeColumn="Dissolution_Date_Flag")
+#SetDebugLevel(ScreenLevel=0,LogFileLevel=0)
+WriteTableToGeoJSON(TableID="Dairies",OutputFile="../data/co-dairies.geojson",LongitudeColumn="Longitude",LatitudeColumn="Latitude")
+#
+# Convert dairy data from Excel to csv format.
+#
+# "Dairy" worksheet
+#  Filter out rows with empty DairyName in case there are extra rows.
+#SetDebugLevel(LogFileLevel=1)
+# Reformat Formation_Date and Dissolution_Date columns to get rid of the time format.
+FormatTableDateTime(TableID="Dairies",InputColumn="Formation_Date",DateTimeFormat="%Y-%m-%d",OutputColumn="Formation_Date",InsertBeforeColumn="Formation_Date_Flag")
+FormatTableDateTime(TableID="Dairies",InputColumn="Dissolution_Date",DateTimeFormat="%Y-%m-%d",OutputColumn="Dissolution_Date",InsertBeforeColumn="Dissolution_Date_Flag")
+#SetDebugLevel(ScreenLevel=0,LogFileLevel=0)
+WriteTableToDelimitedFile(TableID="Dairies",OutputFile="../data/co-dairies.csv",WriteHeaderComments=False)

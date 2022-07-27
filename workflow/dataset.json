@@ -1,0 +1,25 @@
+{
+  "title": "Colorado Dairies",
+  "description": "Colorado Dairies.",
+  "identifier": "owf-data-co-dairies",
+  "landingPage": "https://data.openwaterfoundation.org/state/co/owf/dairies/",
+  "issued": "2022-07-25",
+  "keyword": [
+    "point",
+    "water",
+    "dairies"
+  ],
+  "publisher": {
+    "name": "Open Water Foundation",
+    "mbox": "info@openwaterfoundation.org"
+  },
+  "distribution": [
+    {
+      "accessURL": "",
+      "byteSize": null,
+      "description": "Resource locator",
+      "format": "application/geo+json",
+      "title": "Colorado Dairies"
+    }
+  ]
+}

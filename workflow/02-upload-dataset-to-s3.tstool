@@ -1,0 +1,29 @@
+StartLog(LogFile="results/02-upload-dataset-to-s3.tstool.log")
+# Upload the Colorado dairies dataset to the Open Water Foundation's
+# data.openwaterfoundation.org website.
+#
+# Define controlling properties:
+# - InsertsFolder is the location of data.openwaterfoundation.org inserts for the landing page
+SetProperty(PropertyName="InsertsFolder",PropertyType=String,PropertyValue="../../owf-website-data/inserts")
+#
+# Upload the files:
+# - geojson file output by GeoProcessor
+# - dataset metadata files needed for landing page
+AwsS3(S3Command="UploadObjects",Region="us-west-2",Bucket="data.openwaterfoundation.org",UploadFiles="../data/co-dairies.geojson:state/co/owf/dairies/co-dairies.geojson,dataset.json:state/co/owf/dairies/dataset.json,dataset.png:state/co/owf/dairies/dataset.png,dataset-details.md:state/co/owf/dairies/dataset-details.md,../data/co-dairies.xlsx:state/co/owf/dairies/co-dairies.xlsx,../data/co-dairies.csv:state/co/owf/dairies/co-dairies.csv")
+#
+# Invalidate so that files are available on the CDN as soon as possible.
+# AwsCloudFront(CloudFrontCommand="ListDistributions",Region="aws-global",Comment="*data.openwaterfoundation.org*",OutputTableID="Distributions")
+AwsCloudFront(CloudFrontCommand="InvalidateDistribution",Region="aws-global",Comment="*data.openwaterfoundation.org*",InvalidationPaths="/state/co/owf/dairies/*")
+#
+# Create the dataset catalog with landing page:
+# - also list invalidations to see what is in process
+AwsS3Catalog(Region="us-west-2",Bucket="data.openwaterfoundation.org",StartingPrefix="state/co/owf/dairies/",DistributionId="*data.openwaterfoundation.org*",DatasetIndexFile="results/dataset-index.html",DatasetIndexHeadFile="${InsertsFolder}/head-insert.html",DatasetIndexBodyFile="${InsertsFolder}/body-nav-insert.html",DatasetIndexFooterFile="${InsertsFolder}/footer-insert.html",UploadDatasetFiles=True,OutputTableID="Datasets",KeepFiles=True)
+# AwsCloudFront(CloudFrontCommand="ListInvalidations",Region="af-south-1",OutputTableID="InvalidationList")
+# Compare the local and S3 file to see how long it takes to be avaialable on S3.
+CompareFiles(InputFile1="results/dataset-index.html",InputFile2="https://s3.us-west-2.amazonaws.com/data.openwaterfoundation.org/state/co/owf/dairies/index.html",IfDifferent=Warn,WaitUntil=FilesAreSame,WaitTimeout=600000,WaitInterval=60000)
+# Compare the local and CloudFront file to see how long it takes to be avaialable on CloudFront.
+CompareFiles(InputFile1="results/dataset-index.html",InputFile2="https://data.openwaterfoundation.org/state/co/owf/dairies/index.html",IfDifferent=Warn,WaitUntil=FilesAreSame,WaitTimeout=600000,WaitInterval=60000)
+# Compare the index.html and folder name URLs to make sure that all variants were invalidated:
+# - the AWS configuration should automatically add index.html to folders
+CompareFiles(InputFile1="https://data.openwaterfoundation.org/state/co/owf/dairies/index.html",InputFile2="https://data.openwaterfoundation.org/state/co/owf/dairies/",IfDifferent=Warn,WaitUntil=FilesAreSame,WaitTimeout=600000,WaitInterval=60000)
+CompareFiles(InputFile1="https://data.openwaterfoundation.org/state/co/owf/dairies/index.html",InputFile2="https://data.openwaterfoundation.org/state/co/owf/dairies",IfDifferent=Warn,WaitUntil=FilesAreSame,WaitTimeout=600000,WaitInterval=60000)
