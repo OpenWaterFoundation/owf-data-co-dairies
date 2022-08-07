@@ -9,9 +9,9 @@ The initial focus is the Poudre and South Platte Basins.
 
 The following files can be downloaded or used directly.
 
-| **Layer File** | **Description** |
-| -- | -- |
-| [`co-dairies.geojson`](co-dairies.geojson) | Colorado dairies. |
+| **Layer File** | **Description** | **View** |
+| -- | -- | -- |
+| [`co-dairies.geojson`](co-dairies.geojson) | Colorado dairies. | [View](https://gavinr.github.io/geojson-viewer/?url=https://data.openwaterfoundation.org/state/co/owf/dairies/co-dairies.geojson) |
 
 ## Workflow ##
 
